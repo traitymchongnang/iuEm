@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Heart</title>
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        background: black;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      canvas#pinkboard {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+      }
+
+      .center-text {
+        color: #00ffff;
+        font-size: 32px;
+        font-style: italic;
+        text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff;
+        margin-top: 550px;
+        z-index: 2;
+        animation: glow 2s ease-in-out infinite alternate;
+      }
+
+      @keyframes glow {
+        from {
+          text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff;
+        }
+        to {
+          text-shadow: 0 0 20px #00ffff, 0 0 40px #00ffff;
+        }
+      }
+
+      #stars {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="stars"></canvas>
+    <canvas id="pinkboard"></canvas>
+    <div class="center-text">Íu ìu iu Em Bé :3</div>
+
+    <script>
+      // --------- BẦU TRỜI SAO ----------
+      const starCanvas = document.getElementById("stars");
+      const starCtx = starCanvas.getContext("2d");
+      let stars = [];
+
+      function initStars() {
+        starCanvas.width = window.innerWidth;
+        starCanvas.height = window.innerHeight;
+        stars = [];
+        for (let i = 0; i < 200; i++) {
+          stars.push({
+            x: Math.random() * starCanvas.width,
+            y: Math.random() * starCanvas.height,
+            r: Math.random() * 2,
+            alpha: Math.random(),
+            dAlpha: Math.random() * 0.02 + 0.005,
+          });
+        }
+      }
+
+      function drawStars() {
+        starCtx.clearRect(0, 0, starCanvas.width, starCanvas.height);
+        starCtx.fillStyle = "#00ffff";
+        for (let star of stars) {
+          starCtx.globalAlpha = star.alpha;
+          starCtx.beginPath();
+          starCtx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+          starCtx.fill();
+          star.alpha += star.dAlpha;
+          if (star.alpha <= 0 || star.alpha >= 1) star.dAlpha = -star.dAlpha;
+        }
+        requestAnimationFrame(drawStars);
+      }
+
+      window.addEventListener("resize", initStars);
+      initStars();
+      drawStars();
+
+      // --------- PARTICLE HEART ----------
+      var settings = {
+        particles: {
+          length: 2000,
+          duration: 2,
+          velocity: 100,
+          effect: -1.3,
+          size: 13,
+        },
+      };
+
+      var Point = function (x, y) {
+        this.x = x || 0;
+        this.y = y || 0;
+      };
+      Point.prototype.clone = function () {
+        return new Point(this.x, this.y);
+      };
+      Point.prototype.length = function (l) {
+        if (typeof l === "undefined")
+          return Math.sqrt(this.x * this.x + this.y * this.y);
+        this.normalize();
+        this.x *= l;
+        this.y *= l;
+        return this;
+      };
+      Point.prototype.normalize = function () {
+        var l = this.length();
+        this.x /= l;
+        this.y /= l;
+        return this;
+      };
+
+      var Particle = function () {
+        this.position = new Point();
+        this.velocity = new Point();
+        this.acceleration = new Point();
+        this.age = 0;
+      };
+      Particle.prototype.initialize = function (x, y, dx, dy) {
+        this.position.x = x;
+        this.position.y = y;
+        this.velocity.x = dx;
+        this.velocity.y = dy;
+        this.acceleration.x = dx * settings.particles.effect;
+        this.acceleration.y = dy * settings.particles.effect;
+        this.age = 0;
+      };
+      Particle.prototype.update = function (dt) {
+        this.position.x += this.velocity.x * dt;
+        this.position.y += this.velocity.y * dt;
+        this.velocity.x += this.acceleration.x * dt;
+        this.velocity.y += this.acceleration.y * dt;
+        this.age += dt;
+      };
+      Particle.prototype.draw = function (ctx, img) {
+        function ease(t) {
+          return -t * t * t + 1;
+        }
+        var size = img.width * ease(this.age / settings.particles.duration);
+        ctx.globalAlpha = 1 - this.age / settings.particles.duration;
+        ctx.drawImage(
+          img,
+          this.position.x - size / 2,
+          this.position.y - size / 2,
+          size,
+          size
+        );
+      };
+
+      var ParticlePool = function (length) {
+        var particles = new Array(length),
+          firstActive = 0,
+          firstFree = 0,
+          duration = settings.particles.duration;
+        for (var i = 0; i < particles.length; i++)
+          particles[i] = new Particle();
+        this.add = function (x, y, dx, dy) {
+          particles[firstFree].initialize(x, y, dx, dy);
+          firstFree++;
+          if (firstFree == particles.length) firstFree = 0;
+          if (firstActive == firstFree) {
+            firstActive++;
+            if (firstActive == particles.length) firstActive = 0;
+          }
+        };
+        this.update = function (dt) {
+          var i;
+          if (firstActive < firstFree) {
+            for (i = firstActive; i < firstFree; i++) particles[i].update(dt);
+          }
+          if (firstFree < firstActive) {
+            for (i = firstActive; i < particles.length; i++)
+              particles[i].update(dt);
+            for (i = 0; i < firstFree; i++) particles[i].update(dt);
+          }
+          while (
+            particles[firstActive].age >= duration &&
+            firstActive != firstFree
+          ) {
+            firstActive++;
+            if (firstActive == particles.length) firstActive = 0;
+          }
+        };
+        this.draw = function (ctx, img) {
+          var i;
+          if (firstActive < firstFree) {
+            for (i = firstActive; i < firstFree; i++)
+              particles[i].draw(ctx, img);
+          }
+          if (firstFree < firstActive) {
+            for (i = firstActive; i < particles.length; i++)
+              particles[i].draw(ctx, img);
+            for (i = 0; i < firstFree; i++) particles[i].draw(ctx, img);
+          }
+        };
+      };
+
+      (function (canvas) {
+        var ctx = canvas.getContext("2d"),
+          particles = new ParticlePool(settings.particles.length),
+          particleRate =
+            settings.particles.length / settings.particles.duration,
+          time;
+
+        function pointOnHeart(t) {
+          return new Point(
+            160 * Math.pow(Math.sin(t), 3),
+            130 * Math.cos(t) -
+              50 * Math.cos(2 * t) -
+              20 * Math.cos(3 * t) -
+              10 * Math.cos(4 * t) +
+              25
+          );
+        }
+
+        // Vẽ trái tim cơ bản
+        function drawHeart(ctx, x, y, scale, alpha) {
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.scale(scale, scale);
+          ctx.globalAlpha = alpha;
+          ctx.beginPath();
+          for (let t = -Math.PI; t <= Math.PI; t += 0.02) {
+            let p = pointOnHeart(t);
+            if (t === -Math.PI) ctx.moveTo(p.x, -p.y);
+            else ctx.lineTo(p.x, -p.y);
+          }
+          ctx.closePath();
+          ctx.fillStyle = "#00FFFF";
+          ctx.fill();
+          ctx.restore();
+        }
+
+        // Danh sách trái tim nhỏ (mỗi tim có particle riêng)
+        const smallHearts = [];
+        const minDistance = 250;
+        const maxRange = 800;
+
+        function randomPosition() {
+          let x, y;
+          do {
+            x = (Math.random() * 2 - 1) * maxRange;
+            y = (Math.random() * 2 - 1) * maxRange;
+          } while (Math.sqrt(x * x + y * y) < minDistance);
+          return { x, y };
+        }
+
+        for (let i = 0; i < 20; i++) {
+          let pos = randomPosition();
+          smallHearts.push({
+            x: pos.x,
+            y: pos.y,
+            scale: 0.1 + Math.random() * 0.2,
+            phase: Math.random() * Math.PI * 2,
+            life: 0,
+            duration: 200 + Math.random() * 200,
+            pool: new ParticlePool(200),
+          });
+        }
+
+        var image = (function () {
+          var c = document.createElement("canvas"),
+            ctx = c.getContext("2d");
+          c.width = settings.particles.size;
+          c.height = settings.particles.size;
+          function to(t) {
+            var p = pointOnHeart(t);
+            p.x =
+              settings.particles.size / 2 +
+              (p.x * settings.particles.size) / 350;
+            p.y =
+              settings.particles.size / 2 -
+              (p.y * settings.particles.size) / 350;
+            return p;
+          }
+          ctx.beginPath();
+          var t = -Math.PI,
+            p = to(t);
+          ctx.moveTo(p.x, p.y);
+          while (t < Math.PI) {
+            t += 0.01;
+            p = to(t);
+            ctx.lineTo(p.x, p.y);
+          }
+          ctx.closePath();
+          ctx.fillStyle = "#00FFFF";
+          ctx.fill();
+          var img = new Image();
+          img.src = c.toDataURL();
+          return img;
+        })();
+        var smallImage = (function () {
+          var c = document.createElement("canvas"),
+            ctx = c.getContext("2d");
+
+          c.width = settings.particles.size / 2;
+          c.height = settings.particles.size / 2;
+          function to(t) {
+            var p = pointOnHeart(t);
+            p.x = c.width / 2 + (p.x * c.width) / 350;
+            p.y = c.height / 2 - (p.y * c.height) / 350;
+            return p;
+          }
+          ctx.beginPath();
+          var t = -Math.PI,
+            p = to(t);
+          ctx.moveTo(p.x, p.y);
+          while (t < Math.PI) {
+            t += 0.01;
+            p = to(t);
+            ctx.lineTo(p.x, p.y);
+          }
+          ctx.closePath();
+          ctx.fillStyle = "#00FFFF";
+          ctx.fill();
+          var img = new Image();
+          img.src = c.toDataURL();
+          return img;
+        })();
+
+        var rotationSpeed = 2; // tốc độ xoay
+        var centerImage = new Image();
+        centerImage.src = "z7075357376226_e2bfd8b2d5acf16f9fe3bedbb89141b0.jpg";
+        function render() {
+          requestAnimationFrame(render);
+          var newTime = new Date().getTime() / 1000,
+            dt = newTime - (time || newTime);
+          time = newTime;
+
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          // Vẽ trái tim chính (pháo hoa ở giữa)
+          var amount = particleRate * dt;
+          for (var i = 0; i < amount; i++) {
+            var pos = pointOnHeart(Math.PI - 2 * Math.PI * Math.random());
+            var dir = pos.clone().length(settings.particles.velocity);
+            particles.add(
+              canvas.width / 2 + pos.x,
+              canvas.height / 2 - pos.y,
+              dir.x,
+              -dir.y
+            );
+          }
+          particles.update(dt);
+          ctx.save();
+          ctx.globalAlpha = 1;
+          particles.draw(ctx, image);
+          ctx.restore();
+
+          // Vẽ các trái tim phụ + particle riêng
+          smallHearts.forEach((h) => {
+            h.life++;
+            if (h.life > h.duration) {
+              let pos = randomPosition();
+              h.x = pos.x;
+              h.y = pos.y;
+              h.life = 0;
+              h.duration = 200 + Math.random() * 200;
+            }
+
+            // Particle pháo hoa nhỏ cho tim phụ
+            for (let i = 0; i < 2; i++) {
+              var pos = pointOnHeart(Math.PI - 2 * Math.PI * Math.random());
+              var dir = pos.clone().length(settings.particles.velocity * 0.3);
+              h.pool.add(
+                canvas.width / 2 + h.x + pos.x * h.scale,
+                canvas.height / 2 + h.y - pos.y * h.scale,
+                dir.x,
+                -dir.y
+              );
+            }
+
+            h.pool.update(dt);
+
+            ctx.save();
+            ctx.globalAlpha = 0.8; // chỉnh độ trong suốt cho đẹp
+            h.pool.draw(ctx, smallImage);
+            // --- Vẽ hình trung tâm theo Y ---
+            var t = (new Date().getTime() / 1000) * rotationSpeed; // thời gian
+            var scaleX = Math.cos(t); // scaleX thay đổi -1 → 1, tạo hiệu ứng xoay trục Y
+
+            var pulse = 1 + 0.2 * Math.sin(newTime * 5); // bập bùng
+            var imgWidth = 80 * pulse; // chỉnh kích thước theo ý muốn
+            var imgHeight = 80 * pulse;
+
+            var flip = Math.sin(newTime * 2) >= 0 ? 1 : -1;
+            ctx.save();
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.scale(scaleX, 1); // giả lập xoay trục Y
+            ctx.globalAlpha = 0.9; // chỉnh độ trong suốt
+            ctx.drawImage(
+              centerImage,
+              -imgWidth / 2,
+              -imgHeight / 2,
+              imgWidth,
+              imgHeight
+            );
+
+            ctx.restore();
+          });
+        }
+
+        function onResize() {
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+        }
+        window.onresize = onResize;
+        onResize();
+        render();
+      })(document.getElementById("pinkboard"));
+    </script>
+  </body>
+</html>

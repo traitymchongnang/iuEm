@@ -1,69 +1,70 @@
 <!DOCTYPE html>
 <html lang="vi">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Heart</title>
-    <style>
-      /* Khối CSS đã được sửa lỗi cú pháp */
-      html,
-      body {
-        height: 100%;
-        margin: 0;
-        padding: 0;
-        background: black;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-direction: column;
-        overflow: hidden;
-      }
 
-      canvas#pinkboard {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 1;
-      }
+<head>
+  <meta charset="UTF-8" />
+  <title>Heart</title>
+  <style>
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background: black;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      overflow: hidden;
+    }
 
-      .center-text {
-        color: #00ffff;
-        font-size: 32px;
-        font-style: italic;
+    canvas#pinkboard {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    .center-text {
+      color: #00ffff;
+      font-size: 32px;
+      font-style: italic;
+      text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff;
+      margin-top: 550px;
+      z-index: 2;
+      animation: glow 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes glow {
+      from {
         text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff;
-        margin-top: 550px;
-        z-index: 2;
-        animation: glow 2s ease-in-out infinite alternate;
       }
-
-      @keyframes glow {
-        from {
-          text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff;
-        }
-        to {
-          text-shadow: 0 0 20px #00ffff, 0 0 40px #00ffff;
-        }
+      to {
+        text-shadow: 0 0 20px #00ffff, 0 0 40px #00ffff;
       }
+    }
 
-      #stars {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 0;
-      }
-    </style>
-  </head>
-  <body>
-    <canvas id="stars"></canvas>
-    <canvas id="pinkboard"></canvas>
-    <div class="center-text">Íu ìu iu Em Bé :3</div>
+    #stars {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+    }
 
-       
-    <script>
-      // --------- BẦU TRỜI SAO (KHÔNG ĐỔI) ----------
+  </style>
+
+</head>
+
+<body>
+  <canvas id="stars"></canvas>
+  <canvas id="pinkboard"></canvas>
+  <div class="center-text">Íu ìu iu Em Bé :3</div>
+
+  <script>
       const starCanvas = document.getElementById("stars");
       const starCtx = starCanvas.getContext("2d");
       let stars = [];
@@ -99,7 +100,7 @@
 
       window.addEventListener("resize", initStars);
       initStars();
-      drawStars(); // --------- PARTICLE HEART (Tối ưu hóa Logic) ----------
+      drawStars();
 
       var settings = {
         particles: {
@@ -109,7 +110,7 @@
           effect: -1.3,
           size: 13,
         },
-      }; // ... (Các hàm Point, Particle, ParticlePool giữ nguyên để tiết kiệm không gian, // nhưng lưu ý rằng logic bên trong ParticlePool đã được tối ưu hóa ở lần trước) ...
+      };
 
       var Point = function (x, y) {
         this.x = x || 0;
@@ -224,9 +225,9 @@
           particles = new ParticlePool(settings.particles.length),
           particleRate =
             settings.particles.length / settings.particles.duration,
-          time; // Biến tích lũy thời gian cho sinh hạt chính (MỚI)
+          time;
 
-        var particleTimeAccumulator = 0; // Thời gian giữa hai hạt (thời gian delta lý tưởng)
+        var particleTimeAccumulator = 0;
         var idealParticleDelta = 1 / particleRate;
 
         function pointOnHeart(t) {
@@ -262,11 +263,11 @@
             phase: Math.random() * Math.PI * 2,
             life: 0,
             duration: 200 + Math.random() * 200,
-            pool: new ParticlePool(50), // Thêm biến tích lũy thời gian cho các tim nhỏ (MỚI)
+            pool: new ParticlePool(50),
             accumulator: 0,
-            rate: 50 / settings.particles.duration, // Tốc độ sinh hạt nhỏ hơn
+            rate: 50 / settings.particles.duration,
           });
-        } // (Khối tạo Image/smallImage giữ nguyên)
+        }
 
         var image = (function () {
           var c = document.createElement("canvas"),
@@ -334,12 +335,12 @@
         function render() {
           requestAnimationFrame(render);
           var newTime = new Date().getTime() / 1000,
-            dt = newTime - (time || newTime); // Giới hạn dt để tránh hiệu ứng nhảy khi chuyển tab
+            dt = newTime - (time || newTime);
 
-          dt = Math.min(dt, 1 / 30); // Giới hạn không nhỏ hơn 30 FPS
+          dt = Math.min(dt, 1 / 30);
           time = newTime;
 
-          ctx.clearRect(0, 0, canvas.width, canvas.height); // --- Tối ưu hóa vòng lặp sinh hạt chính bằng Time Accumulator ---
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
 
           particleTimeAccumulator += dt;
           while (particleTimeAccumulator >= idealParticleDelta) {
@@ -358,7 +359,7 @@
           ctx.save();
           ctx.globalAlpha = 1;
           particles.draw(ctx, image);
-          ctx.restore(); // --- Tối ưu hóa vòng lặp cho các trái tim phụ ---
+          ctx.restore();
 
           smallHearts.forEach((h) => {
             h.life++;
@@ -368,7 +369,7 @@
               h.y = pos.y;
               h.life = 0;
               h.duration = 200 + Math.random() * 200;
-            } // Sử dụng Time Accumulator cho tim phụ (MỚI)
+            }
 
             var idealSmallParticleDelta = 1 / h.rate;
             h.accumulator += dt;
@@ -389,7 +390,7 @@
             ctx.save();
             ctx.globalAlpha = 0.8;
             h.pool.draw(ctx, smallImage);
-            ctx.restore(); // --- Vẽ hình trung tâm theo Y (Giữ nguyên) ---
+            ctx.restore();
 
             var t = (new Date().getTime() / 1000) * rotationSpeed;
             var scaleX = Math.cos(t);
@@ -421,6 +422,9 @@
         render();
       })(document.getElementById("pinkboard"));
     </script>
+
      
-  </body>
+    </script>
+
+</body>
 </html>

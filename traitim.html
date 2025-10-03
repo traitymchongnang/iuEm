@@ -168,8 +168,8 @@
           maxSize: 180,
           rotationSpeed: 1,
           pulseSpeed: 3,
-          fadeDuration: 5, // duration in seconds for fade in/out
-          travelDistance: 200, // how far they travel from their origin
+          fadeDuration: 5,
+          travelDistance: 200,
         },
       };
 
@@ -337,12 +337,11 @@
         var largeImageSrc = "cheem.png";
         var largeFloatingImage = new Image();
 
-        // --- Bắt đầu cơ chế tải ảnh an toàn ---
         var rotationSpeed = 2;
         var centerImage = new Image();
 
         let imagesLoadedCount = 0;
-        const totalImagesToLoad = 2; // largeFloatingImage và centerImage
+        const totalImagesToLoad = 2;
 
         function startRenderLoop() {
           imagesLoadedCount++;
@@ -352,11 +351,9 @@
             render();
           }
         }
-        // THỬ PHÁT NHẠC NGAY LẬP TỨC (CHỈ HIỆU QUẢ TRÊN CÁC TRÌNH DUYỆT CŨ)
         const music = document.getElementById("backgroundMusic");
         if (music) {
           music.play().catch((error) => {
-            // Lỗi này thường xuất hiện, thông báo rằng trình duyệt đã chặn
             console.warn(
               "Lỗi: Tự động phát bị chặn. Vui lòng nhấp vào màn hình."
             );
@@ -368,7 +365,6 @@
 
         centerImage.onload = startRenderLoop;
         centerImage.src = "image.jpg";
-        // --- Kết thúc cơ chế tải ảnh an toàn ---
 
         function initLargeFloatingImages() {
           largeFloatingImages = [];
@@ -387,7 +383,7 @@
               fadeInTime: 0,
               fadeOutTime: settings.largeFloatingImages.fadeDuration,
               lifeTime: 0,
-              maxLifeTime: 10 + Math.random() * 10, // Max life before respawn
+              maxLifeTime: 10 + Math.random() * 10,
               travelDirection: {
                 x: Math.random() * 2 - 1,
                 y: Math.random() * 2 - 1,
@@ -519,7 +515,7 @@
             ctx.globalAlpha = 0.8;
             h.pool.draw(ctx, smallImage);
             ctx.restore();
-          }); // Cập nhật và vẽ các ảnh phụ lớn
+          });
 
           largeFloatingImages.forEach((lfi, index) => {
             lfi.lifeTime += dt;
@@ -527,11 +523,11 @@
             let currentAlpha;
             const fadeDuration = settings.largeFloatingImages.fadeDuration;
             if (lfi.lifeTime < fadeDuration) {
-              currentAlpha = lfi.lifeTime / fadeDuration; // Fade in
+              currentAlpha = lfi.lifeTime / fadeDuration;
             } else if (lfi.lifeTime > lfi.maxLifeTime - fadeDuration) {
-              currentAlpha = (lfi.maxLifeTime - lfi.lifeTime) / fadeDuration; // Fade out
+              currentAlpha = (lfi.maxLifeTime - lfi.lifeTime) / fadeDuration;
             } else {
-              currentAlpha = 1; // Fully visible
+              currentAlpha = 1;
             }
             currentAlpha = Math.max(0, Math.min(1, currentAlpha));
 
@@ -556,7 +552,7 @@
                 originX: pos.x,
                 originY: pos.y,
               });
-            } // Di chuyển nhẹ nhàng xung quanh vị trí gốc
+            }
 
             const travelFactor =
               Math.sin(lfi.lifeTime * 0.5) *
@@ -622,10 +618,8 @@
           canvas.height = window.innerHeight;
           initLargeFloatingImages();
         }
-
-        // window.onresize, onResize(), và render() đã được chuyển vào hàm startRenderLoop()
       })(document.getElementById("pinkboard"));
-      // --- HÀM TẠO MÀU NGẪU NHIÊN ---
+
       function getRandomColor() {
         const letters = "0123456789ABCDEF";
         let color = "#";
@@ -634,29 +628,22 @@
         }
         return color;
       }
-      // THÊM LOGIC PHÁT NHẠC
+
       const music = document.getElementById("backgroundMusic");
       const introText = document.getElementById("introText");
       const body = document.body;
 
-      let colorInterval; // Biến lưu trữ ID của hàm lặp
-      // // Khởi tạo trạng thái phát nhạc khi người dùng tương tác lần đầu
+      let colorInterval;
       document.addEventListener(
         "click",
         function () {
           introText.innerHTML = "Cắc Cùm Cum Cắc Cùm Cum :3";
-          // 3. KÍCH HOẠT HIỆU ỨNG CẦU VỒNG CHO CHỮ
           introText.classList.add("rainbow-active");
 
-          // 4. BẮT ĐẦU HIỆU ỨNG NHẤP NHÁY MÀN HÌNH (MÀU NGẪU NHIÊN)
-          // Tần suất: 150ms (0.15 giây) - Tốc độ nhấp nháy có thể điều chỉnh
           colorInterval = setInterval(() => {
-            // Thay đổi màu nền body
             body.style.backgroundColor = getRandomColor();
           }, 150);
-          // Chỉ thử phát nếu nó chưa phát
           if (music.paused) {
-            // Dùng play() và bắt lỗi nếu trình duyệt vẫn chặn
             music.play().catch((error) => {
               console.log(
                 "Autoplay bị chặn, cần thêm tương tác của người dùng."
@@ -665,7 +652,7 @@
           }
         },
         { once: true }
-      ); // Chỉ lắng nghe sự kiện click lần đầu
+      );
     </script>
   </body>
 </html>

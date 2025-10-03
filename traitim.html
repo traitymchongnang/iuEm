@@ -9,6 +9,7 @@
       html,
       body {
         height: 100%;
+        width: 100%;
         margin: 0;
         padding: 0;
         background: black;
@@ -47,7 +48,46 @@
           text-shadow: 0 0 20px #00ffff, 0 0 40px #00ffff;
         }
       }
+      @keyframes rainbow-glow {
+        0% {
+          text-shadow: 0 0 10px red, 0 0 20px red;
+          color: red;
+        }
+        14% {
+          text-shadow: 0 0 10px orange, 0 0 20px orange;
+          color: orange;
+        }
+        28% {
+          text-shadow: 0 0 10px yellow, 0 0 20px yellow;
+          color: yellow;
+        }
+        42% {
+          text-shadow: 0 0 10px limegreen, 0 0 20px limegreen;
+          color: limegreen;
+        }
+        57% {
+          text-shadow: 0 0 10px blue, 0 0 20px blue;
+          color: blue;
+        }
+        71% {
+          text-shadow: 0 0 10px indigo, 0 0 20px indigo;
+          color: indigo;
+        }
+        85% {
+          text-shadow: 0 0 10px violet, 0 0 20px violet;
+          color: violet;
+        }
+        100% {
+          text-shadow: 0 0 10px red, 0 0 20px red;
+          color: red;
+        }
+      }
 
+      /* Class mới để áp dụng hiệu ứng rainbow-glow */
+      .rainbow-active {
+        /* Quan trọng: Hiệu ứng này sẽ ghi đè hiệu ứng 'glow' màu xanh mặc định */
+        animation: rainbow-glow 3s linear infinite;
+      }
       #stars {
         position: absolute;
         top: 0;
@@ -56,13 +96,14 @@
         height: 100%;
         z-index: 0;
       }
-       @media (max-width: 600px) {
+      @media (max-width: 600px) {
         /* Tăng kích thước chữ hiển thị ban đầu */
         .center-text {
-            font-size: 32px; /* Tăng từ 32px lên 40px */
-            /* Có thể điều chỉnh lại margin-top nếu cần */
-            margin-top: 500px;
+          font-size: 400px; /* Tăng từ 32px lên 40px */
+          /* Có thể điều chỉnh lại margin-top nếu cần */
+          margin-top: 500px;
         }
+      }
     </style>
   </head>
 
@@ -584,16 +625,35 @@
 
         // window.onresize, onResize(), và render() đã được chuyển vào hàm startRenderLoop()
       })(document.getElementById("pinkboard"));
-
+      // --- HÀM TẠO MÀU NGẪU NHIÊN ---
+      function getRandomColor() {
+        const letters = "0123456789ABCDEF";
+        let color = "#";
+        for (let i = 0; i < 6; i++) {
+          color += letters[Math.floor(Math.random() * 16)];
+        }
+        return color;
+      }
       // THÊM LOGIC PHÁT NHẠC
       const music = document.getElementById("backgroundMusic");
       const introText = document.getElementById("introText");
+      const body = document.body;
 
+      let colorInterval; // Biến lưu trữ ID của hàm lặp
       // // Khởi tạo trạng thái phát nhạc khi người dùng tương tác lần đầu
       document.addEventListener(
         "click",
         function () {
           introText.innerHTML = "Cắc Cùm Cum Cắc Cùm Cum :3";
+          // 3. KÍCH HOẠT HIỆU ỨNG CẦU VỒNG CHO CHỮ
+          introText.classList.add("rainbow-active");
+
+          // 4. BẮT ĐẦU HIỆU ỨNG NHẤP NHÁY MÀN HÌNH (MÀU NGẪU NHIÊN)
+          // Tần suất: 150ms (0.15 giây) - Tốc độ nhấp nháy có thể điều chỉnh
+          colorInterval = setInterval(() => {
+            // Thay đổi màu nền body
+            body.style.backgroundColor = getRandomColor();
+          }, 150);
           // Chỉ thử phát nếu nó chưa phát
           if (music.paused) {
             // Dùng play() và bắt lỗi nếu trình duyệt vẫn chặn
